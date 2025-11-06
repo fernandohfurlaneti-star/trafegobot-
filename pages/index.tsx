@@ -1,3 +1,4 @@
+{/* Site funcionando! */}
 import { useState, FormEvent } from "react";
 
 // VERSÃO SIMPLIFICADA - SEM COMPONENTES EXTERNOS
