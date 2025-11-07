@@ -1,111 +1,316 @@
-{/* Site funcionando! */}
 import { useState, FormEvent } from "react";
+import { getSmartBenchmarks } from "../smartBenchmarks";
 
-// VERSÃO SIMPLIFICADA - SEM COMPONENTES EXTERNOS
+interface BenchmarkResult {
+  niche: string;
+  cpm: number;
+  cpc: number;
+  ctr: number;
+  conversion_rate: number;
+  suggested_daily: number;
+  trend_score: number;
+  season_factor: number;
+  confidence: number;
+  source: string;
+  last_updated: string;
+  interests: string[];
+}
+
 export default function Home() {
   const [niche, setNiche] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<BenchmarkResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = (e: FormEvent) => {
+  const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
-    if (!niche.trim()) return;
+    
+    if (!niche.trim()) {
+      setError("Digite um nicho para buscar");
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     
-    // Simulação de busca
-    setTimeout(() => {
+    try {
+      // 🔥 USA A API REAL AGORA
+      const data = await getSmartBenchmarks(niche);
+      
       setResult({
         niche,
-        cpm: 22.50,
-        cpc: 1.75,
-        ctr: 1.80,
-        suggested_daily: 85.00,
-        message: `✅ Dados encontrados para: ${niche}`
+        ...data
       });
+      
+    } catch (err) {
+      setError("Erro ao buscar dados. Tente novamente.");
+      console.error(err);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div style={{ 
       padding: '20px', 
       fontFamily: 'Arial, sans-serif',
-      maxWidth: '800px',
-      margin: '0 auto'
+      maxWidth: '900px',
+      margin: '0 auto',
+      backgroundColor: '#f5f5f5',
+      minHeight: '100vh'
     }}>
-      <h1>🚀 TrafegoBot</h1>
-      <p>Encontre benchmarks para seu nicho</p>
-      
-      <form onSubmit={handleSearch} style={{ margin: '20px 0' }}>
-        <input
-          type="text"
-          value={niche}
-          onChange={(e) => setNiche(e.target.value)}
-          placeholder="Digite seu nicho (ex: academia)..."
-          style={{
-            padding: '12px',
-            width: '300px',
-            fontSize: '16px',
-            marginRight: '10px',
-            border: '1px solid #ccc',
-            borderRadius: '8px'
-          }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: loading ? '#ccc' : '#0070f3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          {loading ? 'Buscando...' : '🔍 Buscar'}
-        </button>
-      </form>
-
-      {result && (
-        <div style={{
-          marginTop: '30px',
-          padding: '20px',
-          border: '1px solid #e0e0e0',
-          borderRadius: '12px',
-          backgroundColor: '#f9f9f9'
-        }}>
-          <h2>📊 Resultados para: "{result.niche}"</h2>
-          <p>{result.message}</p>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '30px',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <h1 style={{ color: '#0070f3', margin: 0 }}>🚀 TrafegoBot</h1>
+        <p style={{ color: '#666', marginTop: '8px' }}>
+          Benchmarks inteligentes com dados reais para seu nicho
+        </p>
+        
+        <form onSubmit={handleSearch} style={{ margin: '30px 0' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <input
+              type="text"
+              value={niche}
+              onChange={(e) => setNiche(e.target.value)}
+              placeholder="Digite seu nicho (ex: academia, restaurante)..."
+              style={{
+                padding: '14px',
+                flex: 1,
+                fontSize: '16px',
+                border: '2px solid #e0e0e0',
+                borderRadius: '8px',
+                outline: 'none',
+                transition: 'border 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#0070f3'}
+              onBlur={(e) => e.target.style.borderColor = '#e0e0e0'}
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: '14px 32px',
+                backgroundColor: loading ? '#ccc' : '#0070f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'background-color 0.3s'
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#0051cc';
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) e.currentTarget.style.backgroundColor = '#0070f3';
+              }}
+            >
+              {loading ? '⏳ Buscando...' : '🔍 Buscar'}
+            </button>
+          </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', margin: '20px 0' }}>
-            <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '8px', textAlign: 'center' }}>
-              <h3>💰 CPM</h3>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0070f3' }}>R$ {result.cpm}</p>
-              <small>Custo por 1000 impressões</small>
-            </div>
-            
-            <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '8px', textAlign: 'center' }}>
-              <h3>🖱️ CPC</h3>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0070f3' }}>R$ {result.cpc}</p>
-              <small>Custo por clique</small>
-            </div>
-            
-            <div style={{ padding: '15px', backgroundColor: 'white', borderRadius: '8px', textAlign: 'center' }}>
-              <h3>📈 CTR</h3>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#0070f3' }}>{result.ctr}%</p>
-              <small>Taxa de clique</small>
-            </div>
-          </div>
+          {error && (
+            <p style={{ color: '#e00', marginTop: '10px', fontSize: '14px' }}>
+              ⚠️ {error}
+            </p>
+          )}
+        </form>
 
-          <div style={{ margin: '20px 0' }}>
-            <h3>💡 Investimento Diário Sugerido</h3>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#00a000' }}>R$ {result.suggested_daily}</p>
+        {result && (
+          <div style={{
+            marginTop: '30px',
+            animation: 'fadeIn 0.5s'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h2 style={{ margin: 0 }}>
+                📊 Resultados para: <span style={{ color: '#0070f3' }}>"{result.niche}"</span>
+              </h2>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  backgroundColor: result.source === 'real_api' ? '#00a000' : '#ff9800',
+                  color: 'white',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  {result.source === 'real_api' ? '✓ Dados Reais' : '⚡ Cache'}
+                </span>
+                <p style={{ fontSize: '12px', color: '#999', margin: '4px 0 0 0' }}>
+                  Confiança: {(result.confidence * 100).toFixed(0)}%
+                </p>
+              </div>
+            </div>
+
+            {/* Métricas principais */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+              gap: '15px', 
+              margin: '20px 0' 
+            }}>
+              <div style={{ 
+                padding: '20px', 
+                backgroundColor: '#f0f8ff', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #0070f3',
+                textAlign: 'center' 
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
+                  💰 CPM
+                </h3>
+                <p style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 'bold', 
+                  color: '#0070f3',
+                  margin: 0 
+                }}>
+                  R$ {result.cpm.toFixed(2)}
+                </p>
+                <small style={{ color: '#999' }}>Custo por 1000 impressões</small>
+              </div>
+              
+              <div style={{ 
+                padding: '20px', 
+                backgroundColor: '#f0fff0', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #00a000',
+                textAlign: 'center' 
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
+                  🖱️ CPC
+                </h3>
+                <p style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 'bold', 
+                  color: '#00a000',
+                  margin: 0 
+                }}>
+                  R$ {result.cpc.toFixed(2)}
+                </p>
+                <small style={{ color: '#999' }}>Custo por clique</small>
+              </div>
+              
+              <div style={{ 
+                padding: '20px', 
+                backgroundColor: '#fff8f0', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #ff9800',
+                textAlign: 'center' 
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
+                  📈 CTR
+                </h3>
+                <p style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 'bold', 
+                  color: '#ff9800',
+                  margin: 0 
+                }}>
+                  {result.ctr.toFixed(2)}%
+                </p>
+                <small style={{ color: '#999' }}>Taxa de clique</small>
+              </div>
+
+              <div style={{ 
+                padding: '20px', 
+                backgroundColor: '#f5f0ff', 
+                borderRadius: '8px', 
+                borderLeft: '4px solid #9c27b0',
+                textAlign: 'center' 
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
+                  🎯 Conversão
+                </h3>
+                <p style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 'bold', 
+                  color: '#9c27b0',
+                  margin: 0 
+                }}>
+                  {result.conversion_rate.toFixed(1)}%
+                </p>
+                <small style={{ color: '#999' }}>Taxa de conversão</small>
+              </div>
+            </div>
+
+            {/* Investimento sugerido */}
+            <div style={{
+              marginTop: '25px',
+              padding: '25px',
+              backgroundColor: '#e8f5e9',
+              borderRadius: '8px',
+              borderLeft: '6px solid #00a000'
+            }}>
+              <h3 style={{ margin: '0 0 12px 0', color: '#00a000' }}>
+                💡 Investimento Diário Sugerido
+              </h3>
+              <p style={{ 
+                fontSize: '36px', 
+                fontWeight: 'bold', 
+                color: '#00a000',
+                margin: 0 
+              }}>
+                R$ {result.suggested_daily.toFixed(2)}
+              </p>
+              <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
+                📊 Tendência: {result.trend_score}/100 | 
+                🌡️ Fator sazonal: {result.season_factor.toFixed(2)}x
+              </p>
+            </div>
+
+            {/* Interesses relacionados */}
+            <div style={{ marginTop: '25px' }}>
+              <h3 style={{ marginBottom: '12px' }}>🎯 Interesses Relacionados</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {result.interests.map((interest, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#e3f2fd',
+                      color: '#0070f3',
+                      borderRadius: '20px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer com info de atualização */}
+            <div style={{
+              marginTop: '25px',
+              padding: '15px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: '#999',
+              textAlign: 'center'
+            }}>
+              <p style={{ margin: 0 }}>
+                Última atualização: {new Date(result.last_updated).toLocaleString('pt-BR')}
+              </p>
+              <p style={{ margin: '4px 0 0 0' }}>
+                Fonte: IBGE (IPCA) • Dados correlacionados com tendências de mercado
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
