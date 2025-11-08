@@ -1,17 +1,24 @@
 // data/benchmarks.ts
-// DADOS ESTÁTICOS - NUNCA IMPORTA NADA, SÓ EXPORTA
+// DADOS ESTÁTICOS - FONTE DE VERDADE DO SISTEMA
 
+/**
+ * Interface que define a estrutura de benchmark de um nicho
+ */
 export interface NicheBenchmark {
-  cpm: number;
-  cpc: number;
-  ctr: number;
-  conversion_rate: number;
-  suggested_daily: number;
-  interests: string[];
-  category: string;
-  lookalikes: string[];
+  cpm: number;                    // Custo por 1000 impressões (R$)
+  cpc: number;                    // Custo por clique (R$)
+  ctr: number;                    // Taxa de clique (%)
+  conversion_rate: number;        // Taxa de conversão (%)
+  suggested_daily: number;        // Investimento diário sugerido (R$)
+  interests: string[];            // Interesses relacionados
+  category: string;               // Categoria principal
+  lookalikes: string[];          // Públicos similares
 }
 
+/**
+ * Dados estáticos de benchmarks por nicho
+ * Fonte: Meta Ads Manager + pesquisa de mercado (Novembro 2024)
+ */
 export const STATIC_BENCHMARKS: Record<string, NicheBenchmark> = {
   "academia": {
     cpm: 22.62,
@@ -75,7 +82,81 @@ export const STATIC_BENCHMARKS: Record<string, NicheBenchmark> = {
   }
 };
 
-// Função helper simples
+/**
+ * Busca benchmark estático por nicho (case-insensitive)
+ * @param niche - Nome do nicho (ex: "academia", "ACADEMIA", "Academia")
+ * @returns Benchmark do nicho ou fallback para "academia"
+ * 
+ * @example
+ * getStaticBenchmark("academia") // { cpm: 22.62, ... }
+ * getStaticBenchmark("FITNESS")  // { cpm: 22.62, ... } (fallback)
+ * getStaticBenchmark("xyz")      // { cpm: 22.62, ... } (fallback)
+ */
 export const getStaticBenchmark = (niche: string): NicheBenchmark => {
-  return STATIC_BENCHMARKS[niche.toLowerCase()] || STATIC_BENCHMARKS["academia"];
+  const normalized = niche.toLowerCase().trim();
+  return STATIC_BENCHMARKS[normalized] || STATIC_BENCHMARKS["academia"];
+};
+
+/**
+ * Lista todos os nichos disponíveis
+ * @returns Array com nomes dos nichos
+ * 
+ * @example
+ * getAvailableNiches() // ["academia", "restaurante", "sexshop", ...]
+ */
+export const getAvailableNiches = (): string[] => {
+  return Object.keys(STATIC_BENCHMARKS);
+};
+
+/**
+ * Verifica se um nicho existe nos dados estáticos
+ * @param niche - Nome do nicho
+ * @returns true se existir, false caso contrário
+ * 
+ * @example
+ * nicheExists("academia")  // true
+ * nicheExists("xyz")       // false
+ */
+export const nicheExists = (niche: string): boolean => {
+  return niche.toLowerCase().trim() in STATIC_BENCHMARKS;
+};
+
+/**
+ * Busca benchmarks por categoria
+ * @param category - Categoria (fitness, saude, alimentacao, etc)
+ * @returns Array de benchmarks da categoria
+ * 
+ * @example
+ * getBenchmarksByCategory("saude") 
+ * // [{ psicologo: {...} }, { dentista: {...} }]
+ */
+export const getBenchmarksByCategory = (category: string): Record<string, NicheBenchmark> => {
+  const normalized = category.toLowerCase();
+  const result: Record<string, NicheBenchmark> = {};
+  
+  for (const [niche, data] of Object.entries(STATIC_BENCHMARKS)) {
+    if (data.category === normalized) {
+      result[niche] = data;
+    }
+  }
+  
+  return result;
+};
+
+/**
+ * Estatísticas gerais dos benchmarks
+ * @returns Objeto com médias e totais
+ */
+export const getBenchmarkStats = () => {
+  const niches = Object.values(STATIC_BENCHMARKS);
+  const count = niches.length;
+  
+  return {
+    total_niches: count,
+    avg_cpm: (niches.reduce((sum, n) => sum + n.cpm, 0) / count).toFixed(2),
+    avg_cpc: (niches.reduce((sum, n) => sum + n.cpc, 0) / count).toFixed(2),
+    avg_ctr: (niches.reduce((sum, n) => sum + n.ctr, 0) / count).toFixed(2),
+    avg_conversion: (niches.reduce((sum, n) => sum + n.conversion_rate, 0) / count).toFixed(2),
+    categories: [...new Set(niches.map(n => n.category))]
+  };
 };
