@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { getSmartBenchmarks } from "../smartBenchmarks";
 
+// ✅ Interface COMPLETA com todos os campos
 interface BenchmarkResult {
   niche: string;
   cpm: number;
@@ -10,10 +11,14 @@ interface BenchmarkResult {
   suggested_daily: number;
   trend_score: number;
   season_factor: number;
+  economic_factor?: number;        // Novo
   confidence: number;
   source: string;
   last_updated: string;
   interests: string[];
+  category?: string;                // Novo
+  lookalikes?: string[];            // Novo
+  api_used?: string[];              // Novo
 }
 
 export default function Home() {
@@ -34,7 +39,6 @@ export default function Home() {
     setError(null);
     
     try {
-      // 🔥 USA A API REAL AGORA
       const data = await getSmartBenchmarks(niche);
       
       setResult({
@@ -67,19 +71,20 @@ export default function Home() {
       }}>
         <h1 style={{ color: '#0070f3', margin: 0 }}>🚀 TrafegoBot</h1>
         <p style={{ color: '#666', marginTop: '8px' }}>
-          Benchmarks inteligentes com dados reais para seu nicho
+          Benchmarks inteligentes com dados reais • 50+ nichos disponíveis
         </p>
         
         <form onSubmit={handleSearch} style={{ margin: '30px 0' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <input
               type="text"
               value={niche}
               onChange={(e) => setNiche(e.target.value)}
-              placeholder="Digite seu nicho (ex: academia, restaurante)..."
+              placeholder="Digite seu nicho (ex: academia, restaurante, yoga)..."
               style={{
                 padding: '14px',
                 flex: 1,
+                minWidth: '250px',
                 fontSize: '16px',
                 border: '2px solid #e0e0e0',
                 borderRadius: '8px',
@@ -119,33 +124,77 @@ export default function Home() {
               ⚠️ {error}
             </p>
           )}
+
+          {/* ✅ NOVO: Sugestões de nichos */}
+          <div style={{ marginTop: '15px' }}>
+            <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px 0' }}>
+              💡 Sugestões: 
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {['academia', 'restaurante', 'yoga', 'dentista', 'salao beleza', 'pet shop'].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setNiche(suggestion)}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    backgroundColor: '#f0f0f0',
+                    border: '1px solid #ddd',
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    e.currentTarget.style.borderColor = '#0070f3';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f0f0f0';
+                    e.currentTarget.style.borderColor = '#ddd';
+                  }}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         </form>
 
         {result && (
-          <div style={{
-            marginTop: '30px',
-            animation: 'fadeIn 0.5s'
-          }}>
+          <div style={{ marginTop: '30px' }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '20px'
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '10px'
             }}>
-              <h2 style={{ margin: 0 }}>
-                📊 Resultados para: <span style={{ color: '#0070f3' }}>"{result.niche}"</span>
-              </h2>
+              <div>
+                <h2 style={{ margin: 0 }}>
+                  📊 <span style={{ color: '#0070f3' }}>"{result.niche}"</span>
+                </h2>
+                {/* ✅ NOVO: Mostra categoria */}
+                {result.category && (
+                  <p style={{ fontSize: '14px', color: '#666', margin: '4px 0 0 0' }}>
+                    Categoria: <strong>{result.category}</strong>
+                  </p>
+                )}
+              </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{
                   display: 'inline-block',
                   padding: '4px 12px',
-                  backgroundColor: result.source === 'real_api' ? '#00a000' : '#ff9800',
+                  backgroundColor: result.source === 'real_api' ? '#00a000' : 
+                                   result.source === 'cache' ? '#2196f3' : '#ff9800',
                   color: 'white',
                   borderRadius: '20px',
                   fontSize: '12px',
                   fontWeight: 'bold'
                 }}>
-                  {result.source === 'real_api' ? '✓ Dados Reais' : '⚡ Cache'}
+                  {result.source === 'real_api' ? '✓ Dados Reais' : 
+                   result.source === 'cache' ? '⚡ Cache' : '📦 Fallback'}
                 </span>
                 <p style={{ fontSize: '12px', color: '#999', margin: '4px 0 0 0' }}>
                   Confiança: {(result.confidence * 100).toFixed(0)}%
@@ -178,7 +227,7 @@ export default function Home() {
                 }}>
                   R$ {result.cpm.toFixed(2)}
                 </p>
-                <small style={{ color: '#999' }}>Custo por 1000 impressões</small>
+                <small style={{ color: '#999' }}>por 1000 impressões</small>
               </div>
               
               <div style={{ 
@@ -199,7 +248,7 @@ export default function Home() {
                 }}>
                   R$ {result.cpc.toFixed(2)}
                 </p>
-                <small style={{ color: '#999' }}>Custo por clique</small>
+                <small style={{ color: '#999' }}>por clique</small>
               </div>
               
               <div style={{ 
@@ -220,7 +269,7 @@ export default function Home() {
                 }}>
                   {result.ctr.toFixed(2)}%
                 </p>
-                <small style={{ color: '#999' }}>Taxa de clique</small>
+                <small style={{ color: '#999' }}>taxa de clique</small>
               </div>
 
               <div style={{ 
@@ -241,7 +290,7 @@ export default function Home() {
                 }}>
                   {result.conversion_rate.toFixed(1)}%
                 </p>
-                <small style={{ color: '#999' }}>Taxa de conversão</small>
+                <small style={{ color: '#999' }}>taxa de conversão</small>
               </div>
             </div>
 
@@ -267,6 +316,7 @@ export default function Home() {
               <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
                 📊 Tendência: {result.trend_score}/100 | 
                 🌡️ Fator sazonal: {result.season_factor.toFixed(2)}x
+                {result.economic_factor && ` | 💰 Econômico: ${result.economic_factor.toFixed(3)}x`}
               </p>
             </div>
 
@@ -291,6 +341,29 @@ export default function Home() {
               </div>
             </div>
 
+            {/* ✅ NOVO: Públicos similares (lookalikes) */}
+            {result.lookalikes && result.lookalikes.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <h3 style={{ marginBottom: '12px' }}>👥 Públicos Similares</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {result.lookalikes.map((lookalike, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#fff3e0',
+                        color: '#f57c00',
+                        borderRadius: '20px',
+                        fontSize: '14px'
+                      }}
+                    >
+                      {lookalike}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Footer com info de atualização */}
             <div style={{
               marginTop: '25px',
@@ -305,7 +378,7 @@ export default function Home() {
                 Última atualização: {new Date(result.last_updated).toLocaleString('pt-BR')}
               </p>
               <p style={{ margin: '4px 0 0 0' }}>
-                Fonte: IBGE (IPCA) • Dados correlacionados com tendências de mercado
+                {result.api_used ? `APIs usadas: ${result.api_used.join(', ')}` : 'Fonte: Dados estáticos'}
               </p>
             </div>
           </div>
