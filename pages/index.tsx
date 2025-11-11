@@ -1,24 +1,23 @@
 import { useState, FormEvent } from "react";
-import { getSmartBenchmarks } from "../smartBenchmarks";
 
-// ✅ Interface COMPLETA com todos os campos
+// ✅ Interface CORRIGIDA - compatível com a API
 interface BenchmarkResult {
-  niche: string;
+  niche?: string;
   cpm: number;
   cpc: number;
   ctr: number;
   conversion_rate: number;
   suggested_daily: number;
-  trend_score: number;
-  season_factor: number;
-  economic_factor?: number;        // Novo
+  interests: string[];
+  lookalikes: string[];
   confidence: number;
+  trend_score: number;
   source: string;
   last_updated: string;
-  interests: string[];
-  category?: string;                // Novo
-  lookalikes?: string[];            // Novo
-  api_used?: string[];              // Novo
+  season_factor: number;
+  economic_factor: number;
+  api_used: string[];
+  category: string;
 }
 
 export default function Home() {
@@ -39,12 +38,20 @@ export default function Home() {
     setError(null);
     
     try {
-      const data = await getSmartBenchmarks(niche);
+      // ✅ CORREÇÃO: Agora busca da API, não do smartBenchmarks.ts
+      const response = await fetch(`/api/benchmarks?niche=${encodeURIComponent(niche)}`);
       
-      setResult({
-        niche,
-        ...data
-      });
+      if (!response.ok) {
+        throw new Error('Erro na API');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setResult(data.data);
+      } else {
+        throw new Error(data.error || 'Erro desconhecido');
+      }
       
     } catch (err) {
       setError("Erro ao buscar dados. Tente novamente.");
@@ -125,7 +132,7 @@ export default function Home() {
             </p>
           )}
 
-          {/* ✅ NOVO: Sugestões de nichos */}
+          {/* ✅ Sugestões de nichos */}
           <div style={{ marginTop: '15px' }}>
             <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px 0' }}>
               💡 Sugestões: 
@@ -173,9 +180,9 @@ export default function Home() {
             }}>
               <div>
                 <h2 style={{ margin: 0 }}>
-                  📊 <span style={{ color: '#0070f3' }}>"{result.niche}"</span>
+                  📊 <span style={{ color: '#0070f3' }}>"{niche}"</span>
                 </h2>
-                {/* ✅ NOVO: Mostra categoria */}
+                {/* ✅ Categoria */}
                 {result.category && (
                   <p style={{ fontSize: '14px', color: '#666', margin: '4px 0 0 0' }}>
                     Categoria: <strong>{result.category}</strong>
@@ -315,8 +322,8 @@ export default function Home() {
               </p>
               <p style={{ fontSize: '14px', color: '#666', margin: '8px 0 0 0' }}>
                 📊 Tendência: {result.trend_score}/100 | 
-                🌡️ Fator sazonal: {result.season_factor.toFixed(2)}x
-                {result.economic_factor && ` | 💰 Econômico: ${result.economic_factor.toFixed(3)}x`}
+                🌡️ Fator sazonal: {result.season_factor.toFixed(2)}x |
+                💰 Econômico: {result.economic_factor.toFixed(3)}x
               </p>
             </div>
 
@@ -341,7 +348,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* ✅ NOVO: Públicos similares (lookalikes) */}
+            {/* Públicos similares (lookalikes) */}
             {result.lookalikes && result.lookalikes.length > 0 && (
               <div style={{ marginTop: '20px' }}>
                 <h3 style={{ marginBottom: '12px' }}>👥 Públicos Similares</h3>
