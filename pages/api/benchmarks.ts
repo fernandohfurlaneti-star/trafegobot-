@@ -44,3 +44,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+```
+
+**4.** Commit message: `Corrigir sintaxe console.log`
+
+**5.** Clique **"Commit changes"**
+
+---
+
+## ⏱️ APÓS COMMITAR:
+
+- Aguarde o deploy (1-2 minutos)
+- Quando ficar "Ready", teste novamente:
+```
+https://trafegobot.vercel.app/api/benchmarks?niche=academia
