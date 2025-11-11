@@ -4,57 +4,26 @@ import { getSmartBenchmarks } from '../../smartBenchmarks';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Pega o nicho da query string
     const { niche } = req.query;
 
-    // Validação
     if (!niche || typeof niche !== 'string') {
       return res.status(400).json({
         success: false,
-        error: 'Parâmetro "niche" é obrigatório',
-        example: '/api/benchmarks?niche=academia'
+        error: 'Parâmetro "niche" é obrigatório'
       });
     }
 
-    console.log(`🔍 API /benchmarks: Buscando "${niche}"`);
-
-    // Busca dados inteligentes
     const data = await getSmartBenchmarks(niche);
 
-    console.log(`✅ Dados retornados para "${niche}" (fonte: ${data.source})`);
-
-    // Retorna resposta
     return res.status(200).json({
       success: true,
-      data: data,
-      meta: {
-        niche_requested: niche,
-        source: data.source,
-        confidence: data.confidence
-      }
+      data: data
     });
 
   } catch (error) {
-    console.error('❌ Erro na API /benchmarks:', error);
-
     return res.status(500).json({
       success: false,
-      error: 'Erro interno do servidor',
-      message: error instanceof Error ? error.message : 'Erro desconhecido'
+      error: 'Erro interno'
     });
   }
 }
-```
-
-**4.** Commit message: `Corrigir sintaxe console.log`
-
-**5.** Clique **"Commit changes"**
-
----
-
-## ⏱️ APÓS COMMITAR:
-
-- Aguarde o deploy (1-2 minutos)
-- Quando ficar "Ready", teste novamente:
-```
-https://trafegobot.vercel.app/api/benchmarks?niche=academia
